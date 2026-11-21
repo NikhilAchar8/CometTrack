@@ -48,25 +48,33 @@ def circle(r, n=200):
 def jd_to_date(jd):
     return (datetime(2000, 1, 1, 12) + timedelta(days=jd - 2451545.0)).strftime("%d %b %Y")
 
+PLANETS = [("Mercury", 0.387, "gray"), ("Venus", 0.723, "goldenrod"),
+           ("Earth", 1.0, "royalblue"), ("Mars", 1.524, "tomato"),
+           ("Jupiter", 5.203, "orange"), ("Saturn", 9.537, "khaki"),
+           ("Uranus", 19.19, "lightseagreen"), ("Neptune", 30.07, "slateblue")]
+
 def orbit_3d(c, n_frames=80):
     days = c["tp"] + np.linspace(0, c["per"], 600)
     xy = np.array([comet_position(t, c["tp"], c["q"], c["e"]) for t in days])
     X, Y, Z = to_3d(xy[:, 0], xy[:, 1], c["i"], c["om"], c["w"])
-    ex, ey, ez = circle(1.0)
-    jx, jy, jz = circle(5.2)
     idx = np.linspace(0, len(X)-1, n_frames).astype(int)
-    fig = go.Figure(
-        data=[
-            go.Scatter3d(x=X, y=Y, z=Z, mode="lines", name=c["comet"], line=dict(color="deepskyblue", width=3)),
-            go.Scatter3d(x=[0], y=[0], z=[0], mode="markers", name="Sun", marker=dict(size=7, color="gold")),
-            go.Scatter3d(x=ex, y=ey, z=ez, mode="lines", name="Earth orbit", line=dict(color="royalblue", width=2)),
-            go.Scatter3d(x=jx, y=jy, z=jz, mode="lines", name="Jupiter orbit", line=dict(color="orange", width=2)),
-            go.Scatter3d(x=[X[0]], y=[Y[0]], z=[Z[0]], mode="markers", name="Comet", marker=dict(size=6, color="red")),
-        ],
-        frames=[go.Frame(data=[go.Scatter3d(x=[X[k]], y=[Y[k]], z=[Z[k]], mode="markers",
-                                            marker=dict(size=6, color="red"))],
-                         traces=[4], name=str(n)) for n, k in enumerate(idx)],
-    )
+
+    data = [go.Scatter3d(x=X, y=Y, z=Z, mode="lines", name=c["comet"],
+                         line=dict(color="deepskyblue", width=4)),
+            go.Scatter3d(x=[0], y=[0], z=[0], mode="markers", name="Sun",
+                         marker=dict(size=7, color="gold"))]
+    for pname, radius, color in PLANETS:
+        px, py, pz = circle(radius)
+        data.append(go.Scatter3d(x=px, y=py, z=pz, mode="lines", name=pname,
+                                 line=dict(color=color, width=2)))
+    data.append(go.Scatter3d(x=[X[0]], y=[Y[0]], z=[Z[0]], mode="markers", name="Comet",
+                             marker=dict(size=6, color="red")))
+    comet_trace = len(data) - 1
+
+    frames = [go.Frame(data=[go.Scatter3d(x=[X[k]], y=[Y[k]], z=[Z[k]], mode="markers",
+                                          marker=dict(size=6, color="red"))],
+                       traces=[comet_trace], name=str(n)) for n, k in enumerate(idx)]
+    fig = go.Figure(data=data, frames=frames)
     fig.update_layout(
         scene=dict(aspectmode="data", xaxis_title="x (AU)", yaxis_title="y (AU)", zaxis_title="z (AU)"),
         height=620, margin=dict(l=0, r=0, t=30, b=0),

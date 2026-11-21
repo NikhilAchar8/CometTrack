@@ -123,4 +123,3 @@ with st.expander("Model comparison: perihelion error vs NASA Horizons (days)"):
                    "the search window missed its perihelion.")
     except FileNotFoundError:
         st.warning("perihelion_comparison.csv not found.")
-    }))

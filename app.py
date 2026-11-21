@@ -114,8 +114,13 @@ if risk is not None:
 else:
     st.warning("comet_risk.csv not found. Run Cell 8 first.")
 
-with st.expander("Model comparison: Halley's Comet 2061 perihelion"):
-    st.table(pd.DataFrame({
-        "Model": ["Kepler only", "N-body (REBOUND, 4 giant planets)"],
-        "Error vs reference (days)": [164.5, -23.5],
+with st.expander("Model comparison: perihelion error vs NASA Horizons (days)"):
+    try:
+        comp = pd.read_csv("perihelion_comparison.csv")
+        comp = comp[~comp["comet"].str.startswith("109P")]
+        st.table(comp)
+        st.caption("Positive = predicted later than NASA. Swift-Tuttle is omitted because "
+                   "the search window missed its perihelion.")
+    except FileNotFoundError:
+        st.warning("perihelion_comparison.csv not found.")
     }))
